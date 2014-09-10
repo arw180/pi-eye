@@ -1,0 +1,3 @@
+"""
+Sends alerts via email
+"""
