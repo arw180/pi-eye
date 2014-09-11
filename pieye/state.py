@@ -1,0 +1,16 @@
+"""
+Valid states
+"""
+
+
+class State:
+    DISCONNECTED = 1
+    CONNECTED = 2
+    ARMED_INACTIVE = 3
+    ARMED_ACTIVE = 4
+    MANUAL_PHOTO = 5
+    MANUAL_VIDEO = 6
+    DISARMED = 7
+    TAKING_PICTURE = 8
+    SENDING_ALERT = 9
+    SAVING_TO_CLOUD = 10

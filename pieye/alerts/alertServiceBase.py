@@ -1,5 +1,9 @@
 """
 Base class for all alert types
+
+TODO:
+should this stuff be here, or should alerts go to the pi-eye server
+and get sent out from there? I think maybe that ...
 """
 
 """

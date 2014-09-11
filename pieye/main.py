@@ -58,25 +58,79 @@ Some sort of state machine class to handle state transitions
 
 
 """
+import tornado.httpserver
+import tornado.websocket
+import tornado.ioloop
+import tornado.web
 
-import time
+import constants
+import sensors.motionDetector as motionDetector
+from state import State
 
-import picamera
+current_state = State.DISCONNECTED
 
+initial_detection = False
 
-def main_loop():
-    counter = 0
-    while True:
-        # do something
-        print 'doing stuff...'
-
-        with picamera.PiCamera() as camera:
-            camera.resolution = (1024, 768)
-            camera.start_preview()
-            # Camera warm-up time
-            time.sleep(2)
-            camera.capture('img-%s.jpg' % counter)
-            time.sleep(10)
+motion_detector = motionDetector.MotionDetector()
 
 
-if __name__ == "__main__": main_loop()
+class WSHandler(tornado.websocket.WebSocketHandler):
+    def open(self):
+        print 'new connection'
+        self.write_message("Hello World")
+
+    def on_message(self, message):
+        print 'message received %s' % message
+
+    def on_close(self):
+        print 'connection closed'
+
+
+application = tornado.web.Application([
+    (r'/ws', WSHandler),
+])
+
+
+def detect():
+    if motion_detector.is_motion_detected():
+        print 'ALERT: motion detected'
+    else:
+        print 'no motion detected'
+    #     # take picture
+    #     current_state = State.TAKING_PICTURE
+    #     # create and send alert
+    #     current_state = State.SENDING_ALERT
+    #     # save image to cloud storage
+    #     current_state = State.SAVING_TO_CLOUD
+    #
+    # if current_state == State.DISCONNECTED:
+    #     # try to connect, then do usual stuff
+    #     pass
+    # elif current_state == State.CONNECTED:
+    #     # do normal stuff ??
+    #     pass
+    # elif current_state == State.ARMED_INACTIVE:
+    #     # check for motion/sound
+    #     pass
+    # elif current_state == State.ARMED_ACTIVE:
+    #     # we should already be doing something about this (taking picture, sending notification, pushing data to storage service ...
+    #     pass
+    # elif current_state == State.DISARMED:
+    #     # Do nothing I guess
+    #     pass
+
+
+def status_heartbeat():
+    """
+    Get status info like: light or dark, motion/no motion, busy/not busy,
+    armed/disarmed and send it out
+    """
+    print 'heartbeat status'
+
+if __name__ == "__main__":
+    http_server = tornado.httpserver.HTTPServer(application)
+    http_server.listen(constants.websocket_server_port)
+    main_io_loop = tornado.ioloop.IOLoop.instance()
+    tornado.ioloop.PeriodicCallback(detect, 1000, main_io_loop).start()
+    tornado.ioloop.PeriodicCallback(status_heartbeat, 10000, main_io_loop).start()
+    main_io_loop.start()
