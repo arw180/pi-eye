@@ -64,14 +64,9 @@ import tornado.ioloop
 import tornado.web
 
 import constants
-import sensors.motionDetector as motionDetector
-from state import State
+import guardian
 
-current_state = State.DISCONNECTED
-
-initial_detection = False
-
-motion_detector = motionDetector.MotionDetector()
+guard = guardian.Guardian()
 
 
 class WSHandler(tornado.websocket.WebSocketHandler):
@@ -91,33 +86,8 @@ application = tornado.web.Application([
 ])
 
 
-def detect():
-    if motion_detector.is_motion_detected():
-        print 'ALERT: motion detected'
-    else:
-        print 'no motion detected'
-    #     # take picture
-    #     current_state = State.TAKING_PICTURE
-    #     # create and send alert
-    #     current_state = State.SENDING_ALERT
-    #     # save image to cloud storage
-    #     current_state = State.SAVING_TO_CLOUD
-    #
-    # if current_state == State.DISCONNECTED:
-    #     # try to connect, then do usual stuff
-    #     pass
-    # elif current_state == State.CONNECTED:
-    #     # do normal stuff ??
-    #     pass
-    # elif current_state == State.ARMED_INACTIVE:
-    #     # check for motion/sound
-    #     pass
-    # elif current_state == State.ARMED_ACTIVE:
-    #     # we should already be doing something about this (taking picture, sending notification, pushing data to storage service ...
-    #     pass
-    # elif current_state == State.DISARMED:
-    #     # Do nothing I guess
-    #     pass
+def patrol():
+    guard.patrol()
 
 
 def status_heartbeat():
@@ -131,6 +101,6 @@ if __name__ == "__main__":
     http_server = tornado.httpserver.HTTPServer(application)
     http_server.listen(constants.websocket_server_port)
     main_io_loop = tornado.ioloop.IOLoop.instance()
-    tornado.ioloop.PeriodicCallback(detect, 1000, main_io_loop).start()
+    tornado.ioloop.PeriodicCallback(patrol, 1000, main_io_loop).start()
     tornado.ioloop.PeriodicCallback(status_heartbeat, 10000, main_io_loop).start()
     main_io_loop.start()

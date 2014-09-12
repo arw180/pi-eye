@@ -14,3 +14,4 @@ class State:
     TAKING_PICTURE = 8
     SENDING_ALERT = 9
     SAVING_TO_CLOUD = 10
+    MOTION_DETECTED = 11
